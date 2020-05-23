@@ -17,8 +17,7 @@ pip3 install bokeh
 ```sh
 git clone https://github.com/your_username_/Project-Name.git
 ```
-1. Open final.html
-2. To refresh data, delete final.html and run main.py
+2. Run main.py
 ```sh
 python3 main.py
 ```
