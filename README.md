@@ -21,5 +21,4 @@ git clone https://github.com/your_username_/Project-Name.git
 ```sh
 python3 main.py
 ```
-
-[product-screenshot]: images/screenshot.png
+3. Open index.html

@@ -11,7 +11,7 @@ This script also requires `template.html` to be located in the
 same directory as the script 
 """
 
-from bokeh.models import ColumnDataSource, CustomJS, Slider, RadioButtonGroup, Div, Button, TableColumn, DateFormatter, DataTable, LinearColorMapper, DateSlider
+from bokeh.models import ColumnDataSource, CustomJS, Slider, RadioButtonGroup, Div, Button, TableColumn, DateFormatter, DataTable, LogColorMapper, DateSlider
 from bokeh.io import show, curdoc
 from bokeh.events import ButtonClick
 from bokeh.layouts import row, column, layout
@@ -56,19 +56,19 @@ def parse_data(source_data, data_start_date, data_end_date):
     county_ys = [county["lats"] for county in counties.values() if county["state"] == "ny"]
     county_names = [county['name'] for county in counties.values() if county["state"] == "ny"]
     
-    county_new_positives = [county['new_positives'] for county in source_data if county['test_date'] == data_end_date]
-    county_cumulative_number_of_positives = [county['cumulative_number_of_positives'] for county in source_data if county['test_date'] == data_end_date]
-    county_total_number_of_tests = [county['total_number_of_tests'] for county in source_data if county['test_date'] == data_end_date]
-    county_cumulative_number_of_tests = [county['cumulative_number_of_tests'] for county in source_data if county['test_date'] == data_end_date]
+    county_new_positives = [int(county['new_positives']) for county in source_data if county['test_date'] == data_end_date]
+    county_cumulative_number_of_positives = [int(county['cumulative_number_of_positives']) for county in source_data if county['test_date'] == data_end_date]
+    county_total_number_of_tests = [int(county['total_number_of_tests']) for county in source_data if county['test_date'] == data_end_date]
+    county_cumulative_number_of_tests = [int(county['cumulative_number_of_tests']) for county in source_data if county['test_date'] == data_end_date]
     total_data = {}
     for county in source_data:
         date = county['test_date'].split("T")[0]
         if date not in total_data:
             total_data[date] = [[], [], [], []]
-        total_data[date][0].append(county['new_positives'])
-        total_data[date][1].append(county['cumulative_number_of_positives'])
-        total_data[date][2].append(county['total_number_of_tests'])
-        total_data[date][3].append(county['cumulative_number_of_tests'])
+        total_data[date][0].append(int(county['new_positives']))
+        total_data[date][1].append(int(county['cumulative_number_of_positives']))
+        total_data[date][2].append(int(county['total_number_of_tests']))
+        total_data[date][3].append(int(county['cumulative_number_of_tests']))
     data=dict(x=county_xs,
               y=county_ys,
               name=county_names,
@@ -80,11 +80,11 @@ def parse_data(source_data, data_start_date, data_end_date):
     dates_source = ColumnDataSource(data=total_data)
     return source, dates_source
 
-def init_plot(data):
+def init_plot(source):
     """Initializes the plots
 
     Args:
-        data: data for the current day that is displayed by the plots initially
+        source: data for the current day that is displayed by the plots initially
 
     Returns:
         p: plot that is graphed
@@ -93,7 +93,7 @@ def init_plot(data):
     """
     global palette
     palette = tuple(palette)
-    color_mapper = LinearColorMapper(palette=palette)
+    color_mapper = LogColorMapper(palette=palette, low = 1)
     TOOLS = "wheel_zoom,reset,hover,save"
 
     p = figure(plot_width=1000, plot_height=800, sizing_mode="stretch_width",
@@ -102,7 +102,7 @@ def init_plot(data):
                tooltips=[("Name", "@name"), ("New Positives", "@new_positives"), ("Cumulative Number of Positives", "@cumulative_number_of_positives"), ("Total Number of Tests", "@total_number_of_tests"), ("Cumulative Number of Tests", "@cumulative_number_of_tests"),])
     p.grid.grid_line_color = None
     p.hover.point_policy = "follow_mouse"
-    patches = p.patches('x', 'y', source=data,
+    patches = p.patches('x', 'y', source=source,
                fill_color={'field': 'new_positives', 'transform': color_mapper},
                fill_alpha=0.7, line_color="white", line_width=0.5)
     return p, patches, color_mapper
@@ -157,12 +157,11 @@ def init_widgets_callbacks(source, dates_source, date_slider, radio_button_group
     source.data['total_number_of_tests'] = update_total_number_of_tests;
     source.data['cumulative_number_of_tests'] = update_cumulative_number_of_tests;
 
+    // Patches need to be manually updated and cycled due to a bug in Bokeh :/
     patches.data_source.data['new_positives'] = update_new_positives;
     patches.data_source.data['cumulative_number_of_positives'] = update_cumulative_number_of_positives;
     patches.data_source.data['total_number_of_tests'] = update_total_number_of_tests;
     patches.data_source.data['cumulative_number_of_tests'] = update_cumulative_number_of_tests;
-    
-    // Patches need to be manually updated and cycled due to a bug in Bokeh :/
     var other_index = (current_parameter_index + 1) % 3
     patches.glyph.fill_color = {field: labels[other_index], transform:cmap};
     patches.glyph.fill_color = {field: current_parameter_label, transform:cmap};
@@ -201,8 +200,7 @@ def main():
     # The website only provides 8 (out of 62) values for the start date so let's grab the second to first date
     data_start_date, data_end_date = source_data[-10]['test_date'], source_data[0]['test_date']
     source, dates_source = parse_data(source_data, data_start_date, data_end_date)
-    data = source.data
-    p, patches, color_mapper = init_plot(data)
+    p, patches, color_mapper = init_plot(source)
     date_slider, radio_button_group, button, data_table = init_widgets(data_start_date, data_end_date, source)
     init_widgets_callbacks(source, dates_source, date_slider, radio_button_group, button, data_table, p, patches, color_mapper)    
     inputs = column(radio_button_group, date_slider, button, data_table)
@@ -210,7 +208,7 @@ def main():
     [desc],
     [p, inputs],
     ])
-    output_file("final.html", title="New York Covid-19 Data")
+    output_file("index.html", title="New York Covid-19 Data")
     show(layout)
 
 if __name__ == "__main__":
