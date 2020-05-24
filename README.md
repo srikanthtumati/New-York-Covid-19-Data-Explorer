@@ -15,7 +15,7 @@ pip3 install bokeh
 
 1. Clone the repo
 ```sh
-git clone https://github.com/your_username_/Project-Name.git
+git clone https://github.com/srikanthtumati/new_york_covid-19_data_explorer.git
 ```
 2. Run main.py
 ```sh
