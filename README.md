@@ -1,6 +1,6 @@
 A New York Covid-19 Data Explorer I built while I was learning Bokeh. View a pregenerated version [here](https://www.srikanthtumati.com/New-York-Covid-19-Data-Explorer/).
 
-The project works by utilzing data provided by the NY Health Department's website and creating a dashboard that is fully stored in a standalone HTML file. **As the output is simply a standalone HTML file, the script must be rerun to refresh/update the data.**
+The project works by utilizing data provided by the NY Health Department's website and creating a dashboard that is fully stored in a standalone HTML file. **As the output is simply a standalone HTML file, the script must be rerun to refresh/update the data.**
 
 [![Product Name Screen Shot][product-screenshot]](https://www.srikanthtumati.com/New-York-Covid-19-Data-Explorer/)
 
